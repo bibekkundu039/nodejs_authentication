@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Home Page</title>
+
+    <!-- Font Icon -->
+    <link
+      rel="stylesheet"
+      href="fonts/material-icon/css/material-design-iconic-font.min.css" />
+
+    <!-- Main css -->
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <%- include('partials/header') %> <% if(user) { %>
+    <h1>Welcome <%= user.name %>, You are logged in</h1>
+    <% }else{ %>
+    <h1>You are not logged in</h1>
+    <% } %> <%- include('partials/footer') %>
+  </body>
+</html>
