@@ -8,9 +8,11 @@ import {
 } from "../services/auth.services.js";
 
 export const getLoginPage = async (req, res) => {
+  if (req.cookies.accessToken) return res.redirect("/");
   res.render("auth/login");
 };
 export const getSignupPage = async (req, res) => {
+  if (req.cookies.accessToken) return res.redirect("/");
   res.render("auth/signup");
 };
 
@@ -70,5 +72,18 @@ export const postSignup = async (req, res) => {
 
   console.log("Inserted user:", user);
 
+  res.redirect("/login");
+};
+
+export const getMe = async (req, res) => {
+  if (!req.cookies.accessToken) return res.redirect("/login");
+
+  const user = res.locals.user;
+
+  res.send(`Hello, ${user.name}! and your email is ${user.email}`);
+};
+
+export const userLogout = async (req, res) => {
+  res.clearCookie("accessToken");
   res.redirect("/login");
 };

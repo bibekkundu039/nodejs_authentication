@@ -22,10 +22,13 @@
           <a href="#section2">About</a>
           <a href="#section4">Contact</a>
 
+          <% if(user) { %>
+          <a href="/me">Profile</a>
+          <a href="/logout">Logout</a>
+          <% } else { %>
           <a href="/login">Login</a>
           <a href="/signup">Register</a>
-          <a href="/profile">Profile</a>
-          <a href="/logout">Logout</a>
+          <% } %>
         </nav>
       </div>
     </header>
