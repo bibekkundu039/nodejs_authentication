@@ -33,6 +33,11 @@
                 method="POST"
                 class="register-form"
                 id="login-form">
+                <% if(errors && errors.length > 0) { %> <%
+                errors.forEach((error) => { %>
+                <div class="flash-error"><%= error %></div>
+                <% }) %> <% } %>
+
                 <div class="form-group">
                   <label for="email">
                     <i class="zmdi zmdi-email"></i>

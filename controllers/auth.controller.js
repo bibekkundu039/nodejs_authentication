@@ -6,20 +6,31 @@ import {
   hashPassword,
   verifyPassword,
 } from "../services/auth.services.js";
+import {
+  loginUserSchema,
+  registerUserSchema,
+} from "../validators/auth-validator.js";
 
 export const getLoginPage = async (req, res) => {
   if (req.cookies.accessToken) return res.redirect("/");
-  res.render("auth/login");
+  res.render("auth/login", { errors: req.flash("error") });
 };
 export const getSignupPage = async (req, res) => {
   if (req.cookies.accessToken) return res.redirect("/");
-  res.render("auth/signup");
+  res.render("auth/signup", { errors: req.flash("error") });
 };
 
 export const postLogin = async (req, res) => {
-  // res.setHeader("Set-Cookie", "isLoggedIn=true; path=/;");
+  const result = loginUserSchema.safeParse(req.body);
 
-  const { email, password } = req.body;
+  if (!result.success) {
+    const message = result.error.issues?.[0]?.message || "Invalid input";
+    req.flash("error", message);
+    return res.redirect("/login"); // 🔴 MUST return
+  }
+
+  // ✅ At this point, data is guaranteed
+  const { email, password } = result.data;
 
   //check user form data
   if (!email || !password) return res.status(400).send("Invalid credentials");
@@ -32,12 +43,18 @@ export const postLogin = async (req, res) => {
   console.log("User logged in:", user);
 
   //check user present or not
-  if (!user) return res.status(400).send("Invalid User");
+  if (!user) {
+    req.flash("error", "User not found");
+    return res.redirect("/login");
+  }
 
   const verifiedPassword = await verifyPassword(password, user.password);
 
   //check password
-  if (!verifiedPassword) return res.status(400).send("Invalid Password");
+  if (!verifiedPassword) {
+    req.flash("error", "Incorrect password");
+    return res.redirect("/login");
+  }
 
   //generate token
   const token = generateJWTToken({
@@ -58,12 +75,24 @@ export const postLogin = async (req, res) => {
 };
 
 export const postSignup = async (req, res) => {
-  const { name, email, password } = req.body;
+  // const { name, email, password } = req.body;
+
+  const result = registerUserSchema.safeParse(req.body);
+
+  if (!result.success) {
+    const message = result.error.issues?.[0]?.message || "Invalid input";
+    req.flash("error", message);
+    return res.redirect("/signup"); // 🔴 MUST return
+  }
+
+  // ✅ At this point, data is guaranteed
+  const { name, email, password } = result.data;
 
   const userExists = await getUserByEmail(email);
 
   if (userExists) {
-    return res.status(400).send("User already exists");
+    req.flash("error", "User already exists");
+    return res.redirect("/signup");
   }
 
   const hashedPassword = await hashPassword(password);

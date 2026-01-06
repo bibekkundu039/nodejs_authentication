@@ -57,6 +57,11 @@
                     placeholder="Password" />
                 </div>
 
+                <% if(errors && errors.length > 0) { %> <%
+                errors.forEach((error) => { %>
+                <div class="flash-error"><%- error %></div>
+                <% }); %> <% } %>
+
                 <div class="form-group form-button">
                   <input
                     type="submit"
