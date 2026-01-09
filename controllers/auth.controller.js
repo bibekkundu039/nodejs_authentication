@@ -1,6 +1,10 @@
+import { name } from "ejs";
 import {
+  createAccessToken,
+  createRefreshToken,
+  createSession,
   createUser,
-  generateJWTToken,
+  // generateJWTToken,
   getLoginUser,
   getUserByEmail,
   hashPassword,
@@ -12,15 +16,17 @@ import {
 } from "../validators/auth-validator.js";
 
 export const getLoginPage = async (req, res) => {
-  if (req.cookies.accessToken) return res.redirect("/");
+  if (res.locals.user) return res.redirect("/");
   res.render("auth/login", { errors: req.flash("error") });
 };
 export const getSignupPage = async (req, res) => {
-  if (req.cookies.accessToken) return res.redirect("/");
+  if (res.locals.user) return res.redirect("/");
   res.render("auth/signup", { errors: req.flash("error") });
 };
 
 export const postLogin = async (req, res) => {
+  if (res.locals.user) return res.redirect("/");
+
   const result = loginUserSchema.safeParse(req.body);
 
   if (!result.success) {
@@ -56,19 +62,32 @@ export const postLogin = async (req, res) => {
     return res.redirect("/login");
   }
 
-  //generate token
-  const token = generateJWTToken({
+  //we need to create a session
+  const session = await createSession(user.id, {
+    ip: req.clientIp,
+    userAgent: req.headers["user-agent"],
+  });
+
+  const accessToken = createAccessToken({
     id: user.id,
     name: user.name,
     email: user.email,
+    sessionId: session.id,
   });
 
-  //set cookie
-  // res.cookie("isLoggedIn", true);
-  // res.cookie("user", user.email);
+  const refreshToken = createRefreshToken({ sessionId: session.id });
 
-  //set cookie
-  res.cookie("accessToken", token);
+  const baseConfig = { httpOnly: true, secure: true };
+
+  res.cookie("accessToken", accessToken, {
+    ...baseConfig,
+    maxAge: 15 * 60 * 1000, // 15 minutes
+  });
+
+  res.cookie("refreshToken", refreshToken, {
+    ...baseConfig,
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  });
 
   res.redirect("/");
   // res.render("index", { user });
@@ -76,6 +95,8 @@ export const postLogin = async (req, res) => {
 
 export const postSignup = async (req, res) => {
   // const { name, email, password } = req.body;
+
+  if (res.locals.user) return res.redirect("/");
 
   const result = registerUserSchema.safeParse(req.body);
 
@@ -105,7 +126,7 @@ export const postSignup = async (req, res) => {
 };
 
 export const getMe = async (req, res) => {
-  if (!req.cookies.accessToken) return res.redirect("/login");
+  if (!req.locals.user) return res.redirect("/login");
 
   const user = res.locals.user;
 
