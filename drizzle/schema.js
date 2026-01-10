@@ -22,8 +22,8 @@ export const sessionTable = mysqlTable("sessions", {
   userId: int("user_id")
     .notNull()
     .references(() => usersTable.id, { onDelete: "cascade" }),
-  userAgent: text("user_agent"),
-  ip: varchar({ length: 255 }),
+  userAgent: text("user_agent").notNull(),
+  ip: varchar({ length: 255 }).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
 });

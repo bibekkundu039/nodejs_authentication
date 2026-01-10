@@ -22,7 +22,10 @@ export const getUserByEmail = async (email) => {
 };
 
 export const createUser = async ({ name, email, password }) => {
-  const user = await db.insert(usersTable).values({ name, email, password });
+  const [user] = await db
+    .insert(usersTable)
+    .values({ name, email, password })
+    .$returningId();
 
   return user;
 };

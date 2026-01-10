@@ -121,9 +121,36 @@ export const postSignup = async (req, res) => {
 
   const user = await createUser({ name, email, password: hashedPassword });
 
-  console.log("Inserted user:", user);
+  const session = await createSession(user.id, {
+    ip: req.clientIp,
+    userAgent: req.headers["user-agent"],
+  });
 
-  res.redirect("/login");
+  const accessToken = createAccessToken({
+    id: user.id,
+    name: name,
+    email: email,
+    sessionId: session.id,
+  });
+
+  const refreshToken = createRefreshToken({ sessionId: session.id });
+
+  const baseConfig = { httpOnly: true, secure: true };
+
+  res.cookie("accessToken", accessToken, {
+    ...baseConfig,
+    maxAge: 15 * 60 * 1000, // 15 minutes
+  });
+
+  res.cookie("refreshToken", refreshToken, {
+    ...baseConfig,
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  });
+
+  console.log("USER ID:", user.id);
+  res.redirect("/");
+
+  // res.redirect("/login");
 };
 
 export const getMe = async (req, res) => {
