@@ -1,5 +1,6 @@
 import { name } from "ejs";
 import {
+  clearUserSession,
   createAccessToken,
   createRefreshToken,
   createSession,
@@ -126,7 +127,7 @@ export const postSignup = async (req, res) => {
 };
 
 export const getMe = async (req, res) => {
-  if (!req.locals.user) return res.redirect("/login");
+  if (!res.locals.user) return res.redirect("/login");
 
   const user = res.locals.user;
 
@@ -134,6 +135,8 @@ export const getMe = async (req, res) => {
 };
 
 export const userLogout = async (req, res) => {
+  await clearUserSession(res.locals.user.sessionId);
   res.clearCookie("accessToken");
+  res.clearCookie("refreshToken");
   res.redirect("/login");
 };
